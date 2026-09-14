@@ -1,0 +1,8 @@
+# Virtual environment (rebuild it from requirements.txt instead)
+venv/
+
+# Secrets — API keys for Pinecone, LLMs, etc.
+.env
+
+# Python caches
+__pycache__/
