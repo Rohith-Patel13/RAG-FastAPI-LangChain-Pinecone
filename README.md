@@ -56,14 +56,29 @@ pip install -r requirements.txt
 Or install fresh and record them:
 
 ```bash
-pip install langchain fastapi "uvicorn[standard]" pinecone
+pip install langchain langchain-google-genai fastapi "uvicorn[standard]" python-dotenv pinecone
 pip freeze > requirements.txt
 ```
 
 `requirements.txt` is this project's dependency list (the `package.json` equivalent).
 Commit it so others can rebuild the same environment.
 
-### 4. Deactivate when done
+> **Note:** `langchain-google-genai` is the wrapper for the Google **AI Studio (Gemini API)**
+> path — the one that uses a simple API key. The model is prefixed `google_genai:` in code so
+> LangChain uses this path instead of Vertex AI (which would need a Google Cloud project).
+
+### 4. Configure environment variables
+
+Create a `.env` file in the project root (it is gitignored) with your Gemini API key
+from [Google AI Studio](https://aistudio.google.com/apikey):
+
+```
+GOOGLE_API_KEY=your_key_here
+```
+
+The app loads this automatically via `load_dotenv()` in `index.py`.
+
+### 5. Deactivate when done
 
 ```bash
 deactivate
@@ -71,11 +86,46 @@ deactivate
 
 ## Running the app
 
+This is a FastAPI app, so run it with the **uvicorn** server (not `python index.py`,
+which would just set up the app and exit without serving requests):
+
 ```bash
 uvicorn index:app --reload
 ```
 
-_(Adjust `index:app` to match your FastAPI app object.)_
+- `index` = the file `index.py`
+- `app` = the `FastAPI()` object inside it
+- `--reload` = auto-restart on code changes (development)
+
+The server starts at **http://127.0.0.1:8000** and stays running (Ctrl+C to stop).
+
+### Testing the endpoint
+
+The app exposes a `POST /chat/` endpoint that takes a question and returns the agent's reply.
+
+**Option A — interactive docs (built in):** open **http://127.0.0.1:8000/docs**, expand
+`POST /chat/`, click *Try it out*, and send a request.
+
+**Option B — Postman / curl:**
+
+- Method: `POST`
+- URL: `http://127.0.0.1:8000/chat/`  _(keep the trailing slash)_
+- Body → raw → JSON:
+
+```json
+{
+  "question": "What's the weather in San Francisco?"
+}
+```
+
+curl equivalent:
+
+```bash
+curl -X POST http://127.0.0.1:8000/chat/ -H "Content-Type: application/json" -d "{\"question\": \"What's the weather in San Francisco?\"}"
+```
+
+> Note: visiting `http://127.0.0.1:8000/` in a browser returns **404** — that's expected.
+> Browsers send `GET`, and there is no `GET /` route; only `POST /chat/` is defined.
 
 ## Managing packages
 
