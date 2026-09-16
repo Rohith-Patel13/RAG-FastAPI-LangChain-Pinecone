@@ -60,6 +60,10 @@ pip install langchain langchain-google-genai fastapi "uvicorn[standard]" python-
 pip freeze > requirements.txt
 ```
 
+> **Vector search:** the app uses the `pinecone` client directly. Queries are embedded with
+> Google's `gemini-embedding-001` model at **768 dimensions** to match the `test-index`
+> (768-dim, cosine). The stored text lives in each record's `document` metadata field.
+
 `requirements.txt` is this project's dependency list (the `package.json` equivalent).
 Commit it so others can rebuild the same environment.
 
@@ -74,9 +78,24 @@ from [Google AI Studio](https://aistudio.google.com/apikey):
 
 ```
 GOOGLE_API_KEY=your_key_here
+PINECONE_API_KEY=your_pinecone_key_here
 ```
 
-The app loads this automatically via `load_dotenv()` in `index.py`.
+The app loads these automatically via `load_dotenv()` in `index.py`.
+Get the Pinecone key from your [Pinecone console](https://app.pinecone.io/) → API keys.
+
+## How it works (RAG via tools)
+
+The agent has two tools and decides which to use per question:
+
+- **`search_knowledge_base`** — embeds the question and does a vector search against the
+  Pinecone `test-index`. Used for questions about stored people/records (e.g. "Tell me about
+  Alexandra").
+- **`get_weather`** — a demo tool.
+
+General questions (e.g. "What is the capital of France?") are answered directly by the LLM,
+with no tool call. This routing is driven by each tool's docstring plus the agent's system
+prompt — you don't call the vector search manually.
 
 ### 5. Deactivate when done
 
